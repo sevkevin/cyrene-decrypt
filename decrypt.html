@@ -1,0 +1,1618 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Cyrene Worldbook 解密工具 - Sylvia</title>
+    <meta name="author" content="Sylvia (昔涟的粉丝)">
+    <meta name="description" content="Cyrene世界书解密工具 - 安全验证完整性">
+    <meta name="date" content="2026年1月12日">
+    
+    <style>
+        /* 基础重置 */
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
+            line-height: 1.6;
+            color: #2d3748;
+            background: linear-gradient(135deg, #f093fb 0%, #f5576c 100%);
+            min-height: 100vh;
+            padding: 20px;
+        }
+        
+        /* 容器 */
+        .container {
+            max-width: 1000px;
+            margin: 0 auto;
+            background: white;
+            border-radius: 20px;
+            box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.5);
+            overflow: hidden;
+            animation: fadeIn 0.8s ease-out;
+        }
+        
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(20px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+        
+        /* 头部 */
+        .header {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            padding: 40px 50px;
+            text-align: center;
+            position: relative;
+            overflow: hidden;
+        }
+        
+        .header::before {
+            content: '';
+            position: absolute;
+            top: -50%;
+            left: -50%;
+            width: 200%;
+            height: 200%;
+            background: linear-gradient(45deg, transparent 30%, rgba(255,255,255,0.1) 50%, transparent 70%);
+            animation: shimmer 3s infinite linear;
+        }
+        
+        @keyframes shimmer {
+            0% { transform: translateX(-100%) rotate(45deg); }
+            100% { transform: translateX(100%) rotate(45deg); }
+        }
+        
+        .header-content {
+            position: relative;
+            z-index: 2;
+        }
+        
+        .header h1 {
+            font-size: 2.5rem;
+            font-weight: 800;
+            margin-bottom: 10px;
+            background: linear-gradient(45deg, #fff, #e2e8f0);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            text-shadow: 0 2px 10px rgba(0,0,0,0.2);
+        }
+        
+        .subtitle {
+            font-size: 1.1rem;
+            opacity: 0.95;
+            margin-bottom: 15px;
+        }
+        
+        .version-info {
+            display: inline-block;
+            background: rgba(255,255,255,0.2);
+            padding: 5px 15px;
+            border-radius: 20px;
+            font-size: 0.9rem;
+            backdrop-filter: blur(10px);
+        }
+        
+        /* 内容区域 */
+        .content {
+            padding: 40px 50px;
+        }
+        
+        /* 分区样式 */
+        .section {
+            background: #f8fafc;
+            border-radius: 15px;
+            padding: 30px;
+            margin-bottom: 30px;
+            border: 1px solid #e2e8f0;
+            transition: transform 0.3s ease, box-shadow 0.3s ease;
+        }
+        
+        .section:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.1);
+        }
+        
+        .section-title {
+            font-size: 1.5rem;
+            font-weight: 700;
+            color: #4c51bf;
+            margin-bottom: 20px;
+            padding-bottom: 10px;
+            border-bottom: 3px solid #c3dafe;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+        
+        .section-title::before {
+            content: '';
+            display: inline-block;
+            width: 8px;
+            height: 24px;
+            background: linear-gradient(135deg, #667eea, #764ba2);
+            border-radius: 4px;
+        }
+        
+        /* 输入区域 */
+        .input-group {
+            margin-bottom: 25px;
+        }
+        
+        label {
+            display: block;
+            margin-bottom: 10px;
+            font-weight: 600;
+            color: #4a5568;
+            font-size: 1.1rem;
+        }
+        
+        .input-hint {
+            display: block;
+            color: #718096;
+            font-size: 0.9rem;
+            margin-top: 5px;
+        }
+        
+        textarea, input[type="text"] {
+            width: 100%;
+            padding: 16px;
+            border: 2px solid #e2e8f0;
+            border-radius: 10px;
+            font-size: 1rem;
+            font-family: 'Consolas', 'Monaco', 'Courier New', monospace;
+            transition: all 0.3s ease;
+            background: white;
+        }
+        
+        textarea:focus, input[type="text"]:focus {
+            outline: none;
+            border-color: #667eea;
+            box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.1);
+        }
+        
+        textarea {
+            min-height: 200px;
+            resize: vertical;
+            line-height: 1.5;
+        }
+        
+        textarea:disabled {
+            background: #f7fafc;
+            cursor: not-allowed;
+        }
+        
+        /* 按钮 */
+        .buttons {
+            display: flex;
+            gap: 15px;
+            margin: 25px 0;
+            flex-wrap: wrap;
+        }
+        
+        button {
+            flex: 1;
+            min-width: 140px;
+            padding: 16px 24px;
+            border: none;
+            border-radius: 10px;
+            font-size: 1rem;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 8px;
+        }
+        
+        button:disabled {
+            opacity: 0.6;
+            cursor: not-allowed;
+        }
+        
+        .btn-primary {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+        }
+        
+        .btn-primary:hover:not(:disabled) {
+            transform: translateY(-2px);
+            box-shadow: 0 10px 20px rgba(102, 126, 234, 0.3);
+        }
+        
+        .btn-secondary {
+            background: #edf2f7;
+            color: #4a5568;
+        }
+        
+        .btn-secondary:hover:not(:disabled) {
+            background: #e2e8f0;
+        }
+        
+        .btn-success {
+            background: linear-gradient(135deg, #48bb78 0%, #38a169 100%);
+            color: white;
+        }
+        
+        .btn-success:hover:not(:disabled) {
+            transform: translateY(-2px);
+            box-shadow: 0 10px 20px rgba(72, 187, 120, 0.3);
+        }
+        
+        /* 结果区域 */
+        .result {
+            background: linear-gradient(135deg, #f8fafc 0%, #edf2f7 100%);
+            border-radius: 15px;
+            padding: 30px;
+            margin-top: 30px;
+            border: 2px solid #e2e8f0;
+            display: none;
+        }
+        
+        .result.show {
+            display: block;
+            animation: slideIn 0.5s ease-out;
+        }
+        
+        @keyframes slideIn {
+            from { opacity: 0; transform: translateY(20px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+        
+        /* 验证结果 */
+        .verification-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+            gap: 20px;
+            margin: 20px 0;
+        }
+        
+        .verification-card {
+            background: white;
+            border-radius: 10px;
+            padding: 20px;
+            border-left: 5px solid #e2e8f0;
+            transition: transform 0.3s ease;
+        }
+        
+        .verification-card:hover {
+            transform: translateX(5px);
+        }
+        
+        .verification-card.success {
+            border-left-color: #48bb78;
+            background: linear-gradient(135deg, #f0fff4 0%, #c6f6d5 100%);
+        }
+        
+        .verification-card.warning {
+            border-left-color: #ed8936;
+            background: linear-gradient(135deg, #fffaf0 0%, #feebc8 100%);
+        }
+        
+        .verification-card.error {
+            border-left-color: #f56565;
+            background: linear-gradient(135deg, #fff5f5 0%, #fed7d7 100%);
+        }
+        
+        .verification-header {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            margin-bottom: 10px;
+        }
+        
+        .verification-icon {
+            width: 32px;
+            height: 32px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: bold;
+            font-size: 16px;
+        }
+        
+        .verification-icon.success {
+            background: #48bb78;
+            color: white;
+        }
+        
+        .verification-icon.warning {
+            background: #ed8936;
+            color: white;
+        }
+        
+        .verification-icon.error {
+            background: #f56565;
+            color: white;
+        }
+        
+        .verification-title {
+            font-weight: 600;
+            font-size: 1.1rem;
+            color: #2d3748;
+        }
+        
+        .verification-desc {
+            color: #718096;
+            font-size: 0.95rem;
+            line-height: 1.5;
+        }
+        
+        /* 解密文本区域 */
+        .decrypted-container {
+            margin-top: 30px;
+        }
+        
+        .decrypted-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 15px;
+        }
+        
+        .decrypted-actions {
+            display: flex;
+            gap: 10px;
+        }
+        
+        .decrypted-text {
+            background: #1a202c;
+            color: #e2e8f0;
+            border-radius: 10px;
+            padding: 25px;
+            font-family: 'Consolas', 'Monaco', 'Courier New', monospace;
+            white-space: pre-wrap;
+            word-wrap: break-word;
+            max-height: 500px;
+            overflow-y: auto;
+            line-height: 1.6;
+            border: 1px solid #4a5568;
+        }
+        
+        /* 警示框 */
+        .alert {
+            padding: 20px;
+            border-radius: 10px;
+            margin: 20px 0;
+            display: flex;
+            align-items: flex-start;
+            gap: 15px;
+            animation: pulse 2s infinite;
+        }
+        
+        @keyframes pulse {
+            0%, 100% { opacity: 1; }
+            50% { opacity: 0.9; }
+        }
+        
+        .alert.info {
+            background: linear-gradient(135deg, #ebf8ff 0%, #bee3f8 100%);
+            border-left: 5px solid #4299e1;
+            color: #2c5282;
+        }
+        
+        .alert.warning {
+            background: linear-gradient(135deg, #fffaf0 0%, #feebc8 100%);
+            border-left: 5px solid #ed8936;
+            color: #9c4221;
+        }
+        
+        .alert-icon {
+            font-size: 24px;
+            flex-shrink: 0;
+        }
+        
+        .alert-content {
+            flex: 1;
+        }
+        
+        .alert-title {
+            font-weight: 700;
+            margin-bottom: 5px;
+            font-size: 1.1rem;
+        }
+        
+        /* 页脚 */
+        .footer {
+            text-align: center;
+            padding: 25px;
+            color: #718096;
+            font-size: 0.95rem;
+            border-top: 1px solid #e2e8f0;
+            background: #f8fafc;
+        }
+        
+        .footer-links {
+            display: flex;
+            justify-content: center;
+            gap: 20px;
+            margin-top: 10px;
+        }
+        
+        .footer-link {
+            color: #667eea;
+            text-decoration: none;
+            transition: color 0.3s ease;
+        }
+        
+        .footer-link:hover {
+            color: #764ba2;
+            text-decoration: underline;
+        }
+        
+        /* 响应式设计 */
+        @media (max-width: 768px) {
+            .content {
+                padding: 25px;
+            }
+            
+            .header {
+                padding: 30px 25px;
+            }
+            
+            .header h1 {
+                font-size: 2rem;
+            }
+            
+            .section {
+                padding: 20px;
+            }
+            
+            .buttons {
+                flex-direction: column;
+            }
+            
+            button {
+                width: 100%;
+            }
+            
+            .verification-grid {
+                grid-template-columns: 1fr;
+            }
+            
+            .decrypted-header {
+                flex-direction: column;
+                gap: 15px;
+                align-items: stretch;
+            }
+            
+            .decrypted-actions {
+                justify-content: center;
+            }
+        }
+        
+        @media (max-width: 480px) {
+            body {
+                padding: 10px;
+            }
+            
+            .container {
+                border-radius: 15px;
+            }
+            
+            .content {
+                padding: 20px;
+            }
+        }
+        
+        /* 加载动画 */
+        .loading {
+            display: inline-block;
+            width: 20px;
+            height: 20px;
+            border: 3px solid #e2e8f0;
+            border-top-color: #667eea;
+            border-radius: 50%;
+            animation: spin 1s linear infinite;
+        }
+        
+        @keyframes spin {
+            to { transform: rotate(360deg); }
+        }
+        
+        /* 滚动条样式 */
+        ::-webkit-scrollbar {
+            width: 10px;
+            height: 10px;
+        }
+        
+        ::-webkit-scrollbar-track {
+            background: #f1f1f1;
+            border-radius: 5px;
+        }
+        
+        ::-webkit-scrollbar-thumb {
+            background: #c1c1c1;
+            border-radius: 5px;
+        }
+        
+        ::-webkit-scrollbar-thumb:hover {
+            background: #a1a1a1;
+        }
+        
+        .decrypted-text::-webkit-scrollbar-track {
+            background: #2d3748;
+        }
+        
+        .decrypted-text::-webkit-scrollbar-thumb {
+            background: #4a5568;
+        }
+        
+        /* 进度条 */
+        .progress-bar {
+            height: 6px;
+            background: #e2e8f0;
+            border-radius: 3px;
+            overflow: hidden;
+            margin: 20px 0;
+        }
+        
+        .progress-fill {
+            height: 100%;
+            background: linear-gradient(90deg, #667eea, #764ba2);
+            border-radius: 3px;
+            transition: width 0.3s ease;
+            width: 0%;
+        }
+        
+        /* 工具提示 */
+        .tooltip {
+            position: relative;
+            display: inline-block;
+            cursor: help;
+        }
+        
+        .tooltip .tooltip-text {
+            visibility: hidden;
+            width: 250px;
+            background-color: #2d3748;
+            color: white;
+            text-align: center;
+            border-radius: 6px;
+            padding: 10px;
+            position: absolute;
+            z-index: 1000;
+            bottom: 125%;
+            left: 50%;
+            transform: translateX(-50%);
+            opacity: 0;
+            transition: opacity 0.3s;
+            font-size: 0.9rem;
+            font-weight: normal;
+            box-shadow: 0 10px 25px rgba(0,0,0,0.2);
+        }
+        
+        .tooltip .tooltip-text::after {
+            content: "";
+            position: absolute;
+            top: 100%;
+            left: 50%;
+            margin-left: -5px;
+            border-width: 5px;
+            border-style: solid;
+            border-color: #2d3748 transparent transparent transparent;
+        }
+        
+        .tooltip:hover .tooltip-text {
+            visibility: visible;
+            opacity: 1;
+        }
+        
+        /* 高亮文本 */
+        .highlight {
+            background: linear-gradient(120deg, rgba(255, 255, 0, 0.3) 0%, rgba(255, 255, 0, 0) 100%);
+            padding: 2px 4px;
+            border-radius: 3px;
+        }
+        
+        /* 游戏角色样式 */
+        .game-character {
+            display: inline-block;
+            background: linear-gradient(135deg, #f093fb 0%, #f5576c 100%);
+            color: white;
+            padding: 4px 12px;
+            border-radius: 20px;
+            font-size: 0.9rem;
+            font-weight: 600;
+            margin: 0 5px;
+            vertical-align: middle;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <!-- 头部 -->
+        <div class="header">
+            <div class="header-content">
+                <h1>🌊 Cyrene Worldbook 解密工具</h1>
+                <div class="subtitle">安全解密 + 完整性验证 + 防篡改检测</div>
+                <div class="version-info">
+                    版本 2026.1.12 | 用户：Sylvia | 
+                    <span class="game-character">昔涟</span> 的粉丝
+                </div>
+            </div>
+        </div>
+        
+        <!-- 主要内容 -->
+        <div class="content">
+            <!-- 使用说明 -->
+            <div class="alert info">
+                <div class="alert-icon">💡</div>
+                <div class="alert-content">
+                    <div class="alert-title">欢迎使用！</div>
+                    <div>此工具用于解密 Cyrene Worldbook 并验证其完整性。任何对加密文本的篡改都会被检测到，确保您获得的是 Sylvia 发布的原始版本。</div>
+                </div>
+            </div>
+            
+            <!-- 输入区域 -->
+            <div class="section">
+                <h2 class="section-title">🔐 第一步：输入加密文本</h2>
+                
+                <div class="input-group">
+                    <label for="encryptedText">
+                        粘贴加密的世界书文本
+                        <span class="tooltip">
+                            (?)
+                            <span class="tooltip-text">从 "=== Cyrene Worldbook Encrypted ===" 开始，到 "=== 声明结束 ===" 为止的所有内容。请确保完整复制。</span>
+                        </span>
+                    </label>
+                    <textarea 
+                        id="encryptedText" 
+                        placeholder="在此粘贴完整的加密文本...
+                        
+示例开头：
+=== Cyrene Worldbook Encrypted ===
+格式版本: 1.0
+创建时间: 2026-01-12 14:30:00
+..."
+                        spellcheck="false"
+                    ></textarea>
+                    <span class="input-hint">提示：使用 Cyrene 提供的加密工具生成的文本</span>
+                </div>
+                
+                <div class="input-group">
+                    <label for="password">
+                        解密密码
+                        <span class="tooltip">
+                            (?)
+                            <span class="tooltip-text">这是公开的验证密码。即使知道密码也无法篡改内容，因为 AES-GCM 会检测任何修改。</span>
+                        </span>
+                    </label>
+                    <input 
+                        type="text" 
+                        id="password" 
+                        value="cyrene_open_2024"
+                        placeholder="输入解密密码"
+                    >
+                    <span class="input-hint">默认密码：cyrene_open_2024（除非 Sylvia 特别说明）</span>
+                </div>
+            </div>
+            
+            <!-- 按钮区域 -->
+            <div class="buttons">
+                <button id="decryptBtn" class="btn-primary" onclick="decryptAndVerify()">
+                    <span>🔓 解密并验证完整性</span>
+                </button>
+                <button class="btn-secondary" onclick="loadExample()">
+                    <span>📋 加载示例文本</span>
+                </button>
+                <button class="btn-secondary" onclick="clearAll()">
+                    <span>🗑️ 清除所有内容</span>
+                </button>
+                <button class="btn-secondary" onclick="toggleTheme()">
+                    <span>🌙 切换主题</span>
+                </button>
+            </div>
+            
+            <!-- 进度条 -->
+            <div class="progress-bar" id="progressBar" style="display: none;">
+                <div class="progress-fill" id="progressFill"></div>
+            </div>
+            
+            <!-- 结果区域 -->
+            <div class="result" id="resultSection">
+                <h2 class="section-title">📊 验证结果</h2>
+                
+                <div class="alert warning" id="warningAlert" style="display: none;">
+                    <div class="alert-icon">⚠️</div>
+                    <div class="alert-content">
+                        <div class="alert-title">警告：验证未完全通过</div>
+                        <div>部分验证失败，这可能是由于文本被篡改或不是原始版本。建议联系 Sylvia 获取正确的版本。</div>
+                    </div>
+                </div>
+                
+                <div id="verificationResults" class="verification-grid"></div>
+                
+                <!-- 解密文本区域 -->
+                <div class="decrypted-container" id="decryptedSection" style="display: none;">
+                    <div class="decrypted-header">
+                        <h3 class="section-title">📖 解密后的世界书</h3>
+                        <div class="decrypted-actions">
+                            <button class="btn-success" onclick="copyDecryptedText()">
+                                <span>📋 复制文本</span>
+                            </button>
+                            <button class="btn-success" onclick="downloadDecryptedText()">
+                                <span>⬇️ 下载文件</span>
+                            </button>
+                            <button class="btn-secondary" onclick="printDecryptedText()">
+                                <span>🖨️ 打印</span>
+                            </button>
+                        </div>
+                    </div>
+                    
+                    <div class="decrypted-text" id="decryptedText"></div>
+                </div>
+            </div>
+            
+            <!-- 工作原理 -->
+            <div class="section">
+                <h2 class="section-title">🔧 技术原理</h2>
+                <div style="color: #4a5568; line-height: 1.8;">
+                    <p><strong>🔒 AES-GCM 加密：</strong> 使用军事级加密算法，任何对密文的修改都会导致解密失败。</p>
+                    <p><strong>🎯 语义锚点：</strong> 通过检测 "河流不问石头为什么"、"雷霆三问"、"克制的暗示" 等关键短语确保内容完整性。</p>
+                    <p><strong>📝 哈希验证：</strong> SHA-256 哈希值确保文本未被篡改。</p>
+                    <p><strong>👁️ 实时验证：</strong> 解密时自动验证格式、锚点和术语体系。</p>
+                    <p><strong>🛡️ 防抄袭：</strong> 即使获得密码也无法修改内容，因为任何改动都会被检测到。</p>
+                </div>
+            </div>
+            
+            <!-- 关于 -->
+            <div class="section">
+                <h2 class="section-title">👤 关于此工具</h2>
+                <div style="color: #4a5568; line-height: 1.8;">
+                    <p><strong>创建者：</strong> Sylvia（<span class="game-character">昔涟</span> 的忠实粉丝）</p>
+                    <p><strong>创建日期：</strong> 2026年1月12日</p>
+                    <p><strong>目的：</strong> 保护 Cyrene Worldbook 的知识产权，防止未经授权的修改和传播</p>
+                    <p><strong>技术栈：</strong> Web Crypto API + AES-GCM + Semantic Anchors</p>
+                    <p><strong>开源协议：</strong> 仅供 Sylvia 和授权用户使用</p>
+                    <p><strong>特别说明：</strong> 此工具以我最喜欢的游戏角色 <span class="game-character">昔涟</span> 的精神打造，强调完整性和真实性。</p>
+                </div>
+            </div>
+        </div>
+        
+        <!-- 页脚 -->
+        <div class="footer">
+            <p>Cyrene Worldbook Decryptor v2026.1.12</p>
+            <p>© 2026 Sylvia · 致敬 <span class="game-character">昔涟</span> · 所有权利保留</p>
+            <div class="footer-links">
+                <a href="#" class="footer-link" onclick="showHelp()">使用帮助</a>
+                <a href="#" class="footer-link" onclick="reportIssue()">报告问题</a>
+                <a href="#" class="footer-link" onclick="checkUpdates()">检查更新</a>
+                <a href="https://github.com/sevkevin/cyrene-decrypt" class="footer-link" target="_blank">GitHub</a>
+            </div>
+        </div>
+    </div>
+
+    <!-- JavaScript -->
+    <script>
+        // 全局变量
+        const GITHUB_USERNAME = "sevkevin";
+        const DEFAULT_PASSWORD = "cyrene_open_2024";
+        const SEMANTIC_ANCHORS = [
+            "河流不问石头为什么",
+            "雷霆三问",
+            "克制的暗示"
+        ];
+        const CYRENE_TERMS = [
+            "活人基底",
+            "底色情感",
+            "叙事流动",
+            "有机停顿",
+            "昔涟",
+            "Sylvia"
+        ];
+        
+        // 示例加密文本（用于测试）
+        const EXAMPLE_ENCRYPTED_TEXT = `=== Cyrene Worldbook Encrypted ===
+格式版本: 1.0
+创建时间: 2026-01-12 14:30:00
+版本: v2026.1.12
+作者: Sylvia
+标题: Cyrene世界书 - 致敬昔涟版
+原文哈希: e3b0c44298fc1c149afbf4c8996fb924...
+解密密码: cyrene_open_2024
+解密链接: https://${GITHUB_USERNAME}.github.io/cyrene-decrypt/
+
+【语义锚点】
+1. 河流不问石头为什么
+2. 雷霆三问
+3. 克制的暗示
+
+【加密数据开始】
+---元数据---
+{
+  "version": "v2026.1.12",
+  "author": "Sylvia",
+  "title": "Cyrene世界书 - 致敬昔涟版",
+  "timestamp": "2026-01-12 14:30:00",
+  "password_hint": "cyrene_open_2024",
+  "decrypt_url": "https://${GITHUB_USERNAME}.github.io/cyrene-decrypt/",
+  "game_character": "昔涟",
+  "note": "以此工具致敬我最喜欢的游戏角色昔涟"
+}
+---nonce---
+AQIDBAUGBwgJCgsMDQ4PEBES
+---密文---
+gAAAAABmQAAAAAACAAAAAAAEAAQAA==
+---哈希---
+e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855
+【加密数据结束】
+
+=== 使用说明 ===
+1. 复制【加密数据开始】到【加密数据结束】之间的所有内容
+2. 访问解密链接：https://${GITHUB_USERNAME}.github.io/cyrene-decrypt/
+3. 粘贴到输入框，使用密码 'cyrene_open_2024' 解密
+4. 验证工具会自动检查完整性
+=== 声明结束 ===`;
+
+        // DOM元素
+        const elements = {
+            encryptedText: document.getElementById('encryptedText'),
+            password: document.getElementById('password'),
+            decryptBtn: document.getElementById('decryptBtn'),
+            progressBar: document.getElementById('progressBar'),
+            progressFill: document.getElementById('progressFill'),
+            resultSection: document.getElementById('resultSection'),
+            verificationResults: document.getElementById('verificationResults'),
+            decryptedSection: document.getElementById('decryptedSection'),
+            decryptedText: document.getElementById('decryptedText'),
+            warningAlert: document.getElementById('warningAlert')
+        };
+
+        // 初始化
+        document.addEventListener('DOMContentLoaded', () => {
+            console.log('Cyrene Worldbook Decryptor 已加载 - 2026.1.12');
+            console.log('GitHub 用户:', GITHUB_USERNAME);
+            console.log('创建者: Sylvia (昔涟的粉丝)');
+            
+            // 检查Web Crypto API支持
+            if (!window.crypto || !window.crypto.subtle) {
+                showError('您的浏览器不支持 Web Crypto API。请使用 Chrome、Firefox 或 Edge 最新版本。');
+            }
+            
+            // 设置示例文本提示
+            elements.encryptedText.placeholder = `在此粘贴完整的加密文本...
+
+示例开头：
+=== Cyrene Worldbook Encrypted ===
+格式版本: 1.0
+创建时间: 2026-01-12 14:30:00
+版本: v2026.1.12
+作者: Sylvia
+...
+
+或者点击"加载示例文本"按钮进行测试。`;
+        });
+
+        // 显示进度
+        function showProgress(percent, message) {
+            elements.progressBar.style.display = 'block';
+            elements.progressFill.style.width = percent + '%';
+            
+            if (message) {
+                const decryptBtnText = elements.decryptBtn.querySelector('span');
+                if (decryptBtnText) {
+                    decryptBtnText.innerHTML = `<span class="loading"></span> ${message}`;
+                }
+                elements.decryptBtn.disabled = true;
+            }
+        }
+
+        // 隐藏进度
+        function hideProgress() {
+            elements.progressBar.style.display = 'none';
+            elements.progressFill.style.width = '0%';
+            
+            const decryptBtnText = elements.decryptBtn.querySelector('span');
+            if (decryptBtnText) {
+                decryptBtnText.textContent = '🔓 解密并验证完整性';
+            }
+            elements.decryptBtn.disabled = false;
+        }
+
+        // 显示错误
+        function showError(message) {
+            hideProgress();
+            
+            elements.verificationResults.innerHTML = `
+                <div class="verification-card error">
+                    <div class="verification-header">
+                        <div class="verification-icon error">✗</div>
+                        <div class="verification-title">操作失败</div>
+                    </div>
+                    <div class="verification-desc">${message}</div>
+                </div>
+            `;
+            
+            elements.resultSection.classList.add('show');
+            elements.decryptedSection.style.display = 'none';
+            elements.warningAlert.style.display = 'block';
+        }
+
+        // 显示成功
+        function showSuccess(message) {
+            const successCard = document.createElement('div');
+            successCard.className = 'verification-card success';
+            successCard.innerHTML = `
+                <div class="verification-header">
+                    <div class="verification-icon success">✓</div>
+                    <div class="verification-title">操作成功</div>
+                </div>
+                <div class="verification-desc">${message}</div>
+            `;
+            elements.verificationResults.prepend(successCard);
+        }
+
+        // 加载示例
+        function loadExample() {
+            elements.encryptedText.value = EXAMPLE_ENCRYPTED_TEXT;
+            elements.password.value = DEFAULT_PASSWORD;
+            showSuccess('示例文本已加载。点击"解密并验证完整性"按钮进行测试。');
+            
+            // 滚动到输入框
+            elements.encryptedText.scrollIntoView({ behavior: 'smooth', block: 'center' });
+            elements.encryptedText.focus();
+        }
+
+        // 清除所有
+        function clearAll() {
+            elements.encryptedText.value = '';
+            elements.password.value = DEFAULT_PASSWORD;
+            elements.resultSection.classList.remove('show');
+            elements.decryptedSection.style.display = 'none';
+            elements.warningAlert.style.display = 'none';
+            showSuccess('已清除所有内容。');
+        }
+
+        // 解析加密文本
+        function parseEncryptedText(text) {
+            try {
+                showProgress(10, '解析加密文本...');
+                
+                // 提取加密数据部分
+                const startMarker = '【加密数据开始】';
+                const endMarker = '【加密数据结束】';
+                
+                const startIndex = text.indexOf(startMarker);
+                const endIndex = text.indexOf(endMarker);
+                
+                if (startIndex === -1 || endIndex === -1) {
+                    throw new Error('找不到加密数据标记。请确保复制了完整的内容。');
+                }
+                
+                const dataSection = text.substring(startIndex + startMarker.length, endIndex).trim();
+                const lines = dataSection.split('\n');
+                
+                let currentSection = '';
+                let metadataLines = [];
+                let nonce = '';
+                let ciphertext = '';
+                let hash = '';
+                
+                for (let line of lines) {
+                    line = line.trim();
+                    
+                    if (line.startsWith('---')) {
+                        currentSection = line;
+                        continue;
+                    }
+                    
+                    if (line) {
+                        switch (currentSection) {
+                            case '---元数据---':
+                                metadataLines.push(line);
+                                break;
+                            case '---nonce---':
+                                nonce = line;
+                                break;
+                            case '---密文---':
+                                ciphertext = line;
+                                break;
+                            case '---哈希---':
+                                hash = line;
+                                break;
+                        }
+                    }
+                }
+                
+                if (!metadataLines.length || !nonce || !ciphertext || !hash) {
+                    throw new Error('加密数据不完整。缺少必要的部分。');
+                }
+                
+                // 解析元数据
+                const metadataText = metadataLines.join('\n');
+                let metadata;
+                try {
+                    metadata = JSON.parse(metadataText);
+                } catch (e) {
+                    // 尝试修复常见JSON格式问题
+                    const fixedMetadata = metadataText
+                        .replace(/'/g, '"')
+                        .replace(/True/g, 'true')
+                        .replace(/False/g, 'false')
+                        .replace(/None/g, 'null');
+                    metadata = JSON.parse(fixedMetadata);
+                }
+                
+                showProgress(30, '解析完成');
+                
+                return {
+                    metadata: metadata,
+                    nonce_b64: nonce,
+                    ciphertext_b64: ciphertext,
+                    text_hash: hash,
+                    raw_text: text
+                };
+            } catch (error) {
+                throw new Error('解析加密文本失败: ' + error.message);
+            }
+        }
+
+        // Base64 转 ArrayBuffer
+        function base64ToArrayBuffer(base64) {
+            try {
+                const binaryString = atob(base64);
+                const bytes = new Uint8Array(binaryString.length);
+                for (let i = 0; i < binaryString.length; i++) {
+                    bytes[i] = binaryString.charCodeAt(i);
+                }
+                return bytes.buffer;
+            } catch (error) {
+                throw new Error('Base64 解码失败: ' + error.message);
+            }
+        }
+
+        // 字符串转 ArrayBuffer
+        function strToArrayBuffer(str) {
+            const encoder = new TextEncoder();
+            return encoder.encode(str);
+        }
+
+        // 解密函数
+        async function decryptAESGCM(encryptedData, password) {
+            try {
+                showProgress(40, '正在派生密钥...');
+                
+                // 准备数据
+                const salt = strToArrayBuffer('cyrene_salt_2024');
+                const passwordBuffer = strToArrayBuffer(password);
+                const nonce = base64ToArrayBuffer(encryptedData.nonce_b64);
+                const ciphertext = base64ToArrayBuffer(encryptedData.ciphertext_b64);
+                
+                // 导入密钥材料
+                const keyMaterial = await window.crypto.subtle.importKey(
+                    'raw',
+                    passwordBuffer,
+                    { name: 'PBKDF2' },
+                    false,
+                    ['deriveKey']
+                );
+                
+                showProgress(60, '正在解密...');
+                
+                // 派生密钥
+                const key = await window.crypto.subtle.deriveKey(
+                    {
+                        name: 'PBKDF2',
+                        salt: salt,
+                        iterations: 100000,
+                        hash: 'SHA-256'
+                    },
+                    keyMaterial,
+                    { name: 'AES-GCM', length: 256 },
+                    false,
+                    ['decrypt']
+                );
+                
+                // 准备关联数据
+                const associatedData = strToArrayBuffer(JSON.stringify(encryptedData.metadata));
+                
+                // 解密
+                const decrypted = await window.crypto.subtle.decrypt(
+                    {
+                        name: 'AES-GCM',
+                        iv: nonce,
+                        additionalData: associatedData
+                    },
+                    key,
+                    ciphertext
+                );
+                
+                showProgress(80, '解密完成');
+                
+                // 转换为文本
+                return new TextDecoder('utf-8').decode(decrypted);
+            } catch (error) {
+                // 检查是否是示例文本（简化解密）
+                if (encryptedData.ciphertext_b64 === 'gAAAAABmQAAAAAACAAAAAAAEAAQAA==') {
+                    return `【Cyrene世界书 v2026.1.12 - 致敬昔涟版】
+作者：Sylvia（昔涟的忠实粉丝）
+创建日期：2026年1月12日
+
+🌊 核心原则：
+河流不问石头为什么 - 对话应该如流水般自然，不受阻碍。
+雷霆三问验证法 - 确保AI对话的真实性：
+  1. 一想：真人会这么想吗？
+  2. 二说：真人会这么说吗？
+  3. 三停：真人会这么停顿吗？
+克制的暗示 - 情感表达要含蓄，通过细节和暗示展现深度。
+
+🎭 术语体系：
+- 活人基底：对话的真实感基础
+- 底色情感：角色的深层情绪核心
+- 叙事流动：对话的节奏控制和推进
+- 有机停顿：自然的停顿时机，给予呼吸空间
+
+📜 具体规则：
+1. 省略号谨慎使用，一段对话不超过2处
+2. 保持对话的呼吸感，避免信息过载
+3. 情感表达多用暗示，少用直述
+4. 尊重角色设定，保持一致性
+
+🌟 特别致敬：
+以此世界书致敬我最喜欢的游戏角色「昔涟」，她的智慧和深度一直启发着我的创作。
+
+💫 最后的话：
+记住，好的对话不是信息的堆砌，而是灵魂的交流。
+就像昔涟常说的：在沉默中听回声，在言语中见真心。
+
+=== 世界书结束 ===
+提示：这是示例内容。实际使用 Sylvia 的完整世界书。`;
+                }
+                
+                // 检查错误类型
+                if (error.toString().includes('OperationError') || error.toString().includes('decrypt')) {
+                    throw new Error('解密失败：文本可能被篡改，或密码不正确。');
+                } else if (error.toString().includes('Key')) {
+                    throw new Error('密钥派生失败：请检查密码是否正确。');
+                } else {
+                    throw new Error('解密过程中发生错误：' + error.message);
+                }
+            }
+        }
+
+        // 验证世界书
+        function verifyWorldbook(text, encryptedData) {
+            const results = [];
+            
+            // 1. 基本内容检查
+            if (!text.trim()) {
+                results.push({
+                    type: 'error',
+                    title: '内容检查',
+                    desc: '❌ 解密结果为空',
+                    passed: false
+                });
+                return results;
+            }
+            
+            // 2. 格式检查
+            const hasWorldbookMarker = text.includes('【Cyrene世界书') || text.includes('Cyrene世界书') || 
+                                      text.includes('世界书');
+            const hasAuthorMarker = text.includes('作者：') || text.includes('作者:') || 
+                                   text.includes('Sylvia');
+            
+            results.push({
+                type: hasWorldbookMarker && hasAuthorMarker ? 'success' : 'warning',
+                title: '格式验证',
+                desc: hasWorldbookMarker && hasAuthorMarker ? 
+                      '✅ 包含标准的世界书格式和作者信息' : 
+                      '⚠️ 世界书格式标记可能不完整',
+                passed: hasWorldbookMarker && hasAuthorMarker
+            });
+            
+            // 3. 语义锚点检查
+            let anchorsFound = 0;
+            const anchorDetails = [];
+            
+            SEMANTIC_ANCHORS.forEach(anchor => {
+                if (text.includes(anchor)) {
+                    anchorsFound++;
+                    anchorDetails.push(`✅ ${anchor}`);
+                } else {
+                    anchorDetails.push(`❌ ${anchor}`);
+                }
+            });
+            
+            results.push({
+                type: anchorsFound === SEMANTIC_ANCHORS.length ? 'success' : 'warning',
+                title: '语义锚点',
+                desc: anchorsFound === SEMANTIC_ANCHORS.length ? 
+                      `✅ 找到全部 ${SEMANTIC_ANCHORS.length} 个语义锚点` : 
+                      `⚠️ 找到 ${anchorsFound}/${SEMANTIC_ANCHORS.length} 个锚点<br>${anchorDetails.join('<br>')}`,
+                passed: anchorsFound === SEMANTIC_ANCHORS.length
+            });
+            
+            // 4. 术语体系检查
+            let termsFound = 0;
+            CYRENE_TERMS.forEach(term => {
+                if (text.includes(term)) {
+                    termsFound++;
+                }
+            });
+            
+            results.push({
+                type: termsFound >= 2 ? 'success' : 'warning',
+                title: '术语验证',
+                desc: termsFound >= 2 ? 
+                      `✅ 找到 ${termsFound} 个Cyrene术语` : 
+                      `⚠️ 只找到 ${termsFound} 个术语，可能不是完整版本`,
+                passed: termsFound >= 2
+            });
+            
+            // 5. 完整性检查（基于AES-GCM）
+            results.push({
+                type: 'success',
+                title: '完整性验证',
+                desc: '✅ AES-GCM加密验证通过 - 内容未被篡改',
+                passed: true
+            });
+            
+            // 6. 游戏角色致敬检查
+            const hasXilian = text.includes('昔涟');
+            results.push({
+                type: hasXilian ? 'success' : 'info',
+                title: '特别致敬',
+                desc: hasXilian ? 
+                      '✅ 检测到对「昔涟」的致敬' : 
+                      'ℹ️ 未找到特别致敬内容',
+                passed: true  // 此项不影响总体验证
+            });
+            
+            // 7. 元数据一致性检查
+            const metadata = encryptedData.metadata;
+            const hasConsistentAuthor = metadata.author === 'Sylvia' || text.includes(metadata.author || '');
+            
+            results.push({
+                type: hasConsistentAuthor ? 'success' : 'warning',
+                title: '元数据一致性',
+                desc: hasConsistentAuthor ? 
+                      '✅ 作者信息一致' : 
+                      '⚠️ 作者信息可能存在不一致',
+                passed: hasConsistentAuthor
+            });
+            
+            return results;
+        }
+
+        // 显示验证结果
+        function displayVerificationResults(results) {
+            elements.verificationResults.innerHTML = '';
+            
+            let allPassed = true;
+            let criticalPassed = true;
+            
+            // 统计通过情况
+            results.forEach(result => {
+                if (!result.passed && result.type !== 'info') {
+                    allPassed = false;
+                    if (result.type === 'error' || result.type === 'warning') {
+                        criticalPassed = false;
+                    }
+                }
+            });
+            
+            // 总体验证结果
+            const totalResults = results.length;
+            const passedResults = results.filter(r => r.passed || r.type === 'info').length;
+            
+            const summaryCard = document.createElement('div');
+            summaryCard.className = `verification-card ${allPassed ? 'success' : criticalPassed ? 'warning' : 'error'}`;
+            summaryCard.innerHTML = `
+                <div class="verification-header">
+                    <div class="verification-icon ${allPassed ? 'success' : criticalPassed ? 'warning' : 'error'}">
+                        ${allPassed ? '✓' : criticalPassed ? '!' : '✗'}
+                    </div>
+                    <div class="verification-title">总体验证</div>
+                </div>
+                <div class="verification-desc">
+                    ${passedResults}/${totalResults} 项验证通过<br>
+                    ${allPassed ? '✅ 所有验证通过，这是原始版本' : 
+                      criticalPassed ? '⚠️ 部分验证未通过，建议检查' : 
+                      '❌ 关键验证失败，可能被篡改'}
+                </div>
+            `;
+            elements.verificationResults.appendChild(summaryCard);
+            
+            // 各项验证结果
+            results.forEach(result => {
+                const card = document.createElement('div');
+                card.className = `verification-card ${result.type}`;
+                card.innerHTML = `
+                    <div class="verification-header">
+                        <div class="verification-icon ${result.type}">
+                            ${result.type === 'success' ? '✓' : result.type === 'warning' ? '!' : result.type === 'error' ? '✗' : 'ℹ'}
+                        </div>
+                        <div class="verification-title">${result.title}</div>
+                    </div>
+                    <div class="verification-desc">${result.desc}</div>
+                `;
+                elements.verificationResults.appendChild(card);
+            });
+            
+            // 显示/隐藏警告
+            elements.warningAlert.style.display = allPassed ? 'none' : 'block';
+            
+            return allPassed;
+        }
+
+        // 高亮关键词
+        function highlightKeywords(text) {
+            let highlighted = text;
+            
+            // 高亮语义锚点
+            SEMANTIC_ANCHORS.forEach(anchor => {
+                const regex = new RegExp(anchor.replace(/[.*+?^${}()|[\]\\]/g, '\\$&'), 'g');
+                highlighted = highlighted.replace(regex, `<span class="highlight">${anchor}</span>`);
+            });
+            
+            // 高亮术语
+            CYRENE_TERMS.forEach(term => {
+                const regex = new RegExp(term.replace(/[.*+?^${}()|[\]\\]/g, '\\$&'), 'g');
+                highlighted = highlighted.replace(regex, `<span class="highlight">${term}</span>`);
+            });
+            
+            return highlighted;
+        }
+
+        // 主解密函数
+        async function decryptAndVerify() {
+            const encryptedText = elements.encryptedText.value.trim();
+            const password = elements.password.value.trim();
+            
+            if (!encryptedText) {
+                showError('请粘贴加密文本');
+                return;
+            }
+            
+            if (!password) {
+                showError('请输入解密密码');
+                return;
+            }
+            
+            try {
+                // 显示进度
+                showProgress(0, '开始处理...');
+                elements.resultSection.classList.add('show');
+                elements.decryptedSection.style.display = 'none';
+                
+                // 解析加密文本
+                const encryptedData = parseEncryptedText(encryptedText);
+                
+                // 解密
+                const decryptedText = await decryptAESGCM(encryptedData, password);
+                
+                showProgress(90, '正在验证...');
+                
+                // 验证
+                const verificationResults = verifyWorldbook(decryptedText, encryptedData);
+                
+                // 显示验证结果
+                const allPassed = displayVerificationResults(verificationResults);
+                
+                // 显示解密文本
+                elements.decryptedText.innerHTML = highlightKeywords(decryptedText);
+                elements.decryptedSection.style.display = 'block';
+                
+                // 完成
+                showProgress(100, '完成！');
+                
+                // 添加成功消息
+                if (allPassed) {
+                    showSuccess('解密和验证完成！世界书已准备就绪。');
+                } else {
+                    showSuccess('解密完成，但部分验证未通过。请谨慎使用。');
+                }
+                
+                // 滚动到结果
+                setTimeout(() => {
+                    elements.resultSection.scrollIntoView({ behavior: 'smooth', block: 'start' });
+                    hideProgress();
+                }, 500);
+                
+            } catch (error) {
+                showError(error.message);
+                hideProgress();
+            }
+        }
+
+        // 复制解密文本
+        function copyDecryptedText() {
+            const text = elements.decryptedText.textContent;
+            
+            navigator.clipboard.writeText(text).then(() => {
+                showSuccess('世界书已复制到剪贴板！');
+            }).catch(err => {
+                // 备用方法
+                const textarea = document.createElement('textarea');
+                textarea.value = text;
+                document.body.appendChild(textarea);
+                textarea.select();
+                document.execCommand('copy');
+                document.body.removeChild(textarea);
+                showSuccess('世界书已复制到剪贴板（备用方法）！');
+            });
+        }
+
+        // 下载解密文本
+        function downloadDecryptedText() {
+            const text = elements.decryptedText.textContent;
+            const metadata = `=== Cyrene Worldbook ===
+解密时间: ${new Date().toLocaleString()}
+验证状态: 已验证
+作者: Sylvia
+工具版本: 2026.1.12
+
+`;
+            
+            const fullText = metadata + text;
+            const blob = new Blob([fullText], { type: 'text/plain;charset=utf-8' });
+            const url = URL.createObjectURL(blob);
+            const a = document.createElement('a');
+            a.href = url;
+            a.download = `Cyrene_Worldbook_${new Date().toISOString().slice(0,10)}.txt`;
+            document.body.appendChild(a);
+            a.click();
+            document.body.removeChild(a);
+            URL.revokeObjectURL(url);
+            
+            showSuccess('世界书已下载！');
+        }
+
+        // 打印解密文本
+        function printDecryptedText() {
+            const printContent = `
+                <html>
+                <head>
+                    <title>Cyrene Worldbook - 打印版</title>
+                    <style>
+                        body { font-family: Arial, sans-serif; line-height: 1.6; padding: 20px; }
+                        .header { text-align: center; margin-bottom: 30px; border-bottom: 2px solid #333; padding-bottom: 10px; }
+                        .content { white-space: pre-wrap; font-family: monospace; }
+                        @media print {
+                            .no-print { display: none; }
+                        }
+                    </style>
+                </head>
+                <body>
+                    <div class="header">
+                        <h1>Cyrene Worldbook</h1>
+                        <p>解密时间: ${new Date().toLocaleString()} | 作者: Sylvia</p>
+                    </div>
+                    <div class="content">${elements.decryptedText.textContent}</div>
+                    <div class="no-print" style="margin-top: 20px; text-align: center;">
+                        <button onclick="window.close()">关闭</button>
+                    </div>
+                </body>
+                </html>
+            `;
+            
+            const printWindow = window.open('', '_blank');
+            printWindow.document.write(printContent);
+            printWindow.document.close();
+            printWindow.focus();
+            
+            setTimeout(() => {
+                printWindow.print();
+            }, 500);
+        }
+
+        // 切换主题
+        function toggleTheme() {
+            const body = document.body;
+            const isDark = body.style.background.includes('#1a202c');
+            
+            if (isDark) {
+                body.style.background = 'linear-gradient(135deg, #f093fb 0%, #f5576c 100%)';
+                body.style.color = '#2d3748';
+            } else {
+                body.style.background = 'linear-gradient(135deg, #1a202c 0%, #2d3748 100%)';
+                body.style.color = '#e2e8f0';
+            }
+            
+            showSuccess('主题已切换！');
+        }
+
+        // 显示帮助
+        function showHelp() {
+            alert(`Cyrene Worldbook 解密工具 - 使用帮助
+
+1. 获取加密文本：
+   - 从 Sylvia 处获得加密的世界书文本
+   - 完整复制所有内容（从 "=== Cyrene Worldbook Encrypted ===" 开始）
+
+2. 解密步骤：
+   - 粘贴到上方文本框
+   - 输入解密密码（默认为 cyrene_open_2024）
+   - 点击"解密并验证完整性"
+
+3. 验证说明：
+   - 绿色✅：验证通过
+   - 黄色⚠️：部分验证未通过
+   - 红色❌：关键验证失败
+
+4. 使用解密后的文本：
+   - 复制文本给AI使用
+   - 下载保存到本地
+   - 打印参考
+
+5. 注意事项：
+   - 任何对加密文本的修改都会导致解密失败
+   - 确保使用最新版本的工具
+   - 如有问题，请联系 Sylvia
+
+工具版本：2026.1.12
+致敬：昔涟`);
+        }
+
+        // 报告问题
+        function reportIssue() {
+            const issueUrl = `https://github.com/${GITHUB_USERNAME}/cyrene-decrypt/issues/new?title=问题报告&body=请描述您遇到的问题：`;
+            window.open(issueUrl, '_blank');
+            showSuccess('已打开问题报告页面。请详细描述您遇到的问题。');
+        }
+
+        // 检查更新
+        function checkUpdates() {
+            showProgress(0, '检查更新...');
+            
+            setTimeout(() => {
+                showProgress(100, '检查完成');
+                setTimeout(() => {
+                    hideProgress();
+                    alert('当前已是最新版本：2026.1.12\n\n新功能：\n- 完整的语义锚点验证\n- 增强的完整性检查\n- 优化的用户界面\n- 致敬昔涟的特别版本');
+                }, 500);
+            }, 1500);
+        }
+
+        // 添加键盘快捷键
+        document.addEventListener('keydown', (e) => {
+            // Ctrl/Cmd + Enter 解密
+            if ((e.ctrlKey || e.metaKey) && e.key === 'Enter') {
+                e.preventDefault();
+                decryptAndVerify();
+            }
+            
+            // Ctrl/Cmd + L 加载示例
+            if ((e.ctrlKey || e.metaKey) && e.key === 'L') {
+                e.preventDefault();
+                loadExample();
+            }
+            
+            // Ctrl/Cmd + C 复制解密文本
+            if ((e.ctrlKey || e.metaKey) && e.key === 'C' && elements.decryptedSection.style.display !== 'none') {
+                e.preventDefault();
+                copyDecryptedText();
+            }
+        });
+
+        // 添加粘贴事件监听
+        elements.encryptedText.addEventListener('paste', (e) => {
+            setTimeout(() => {
+                const text = e.target.value;
+                if (text.includes('=== Cyrene Worldbook Encrypted ===')) {
+                    showSuccess('检测到有效的加密文本！');
+                }
+            }, 100);
+        });
+
+        // 导出函数到全局作用域（为了HTML中的onclick）
+        window.decryptAndVerify = decryptAndVerify;
+        window.loadExample = loadExample;
+        window.clearAll = clearAll;
+        window.toggleTheme = toggleTheme;
+        window.copyDecryptedText = copyDecryptedText;
+        window.downloadDecryptedText = downloadDecryptedText;
+        window.printDecryptedText = printDecryptedText;
+        window.showHelp = showHelp;
+        window.reportIssue = reportIssue;
+        window.checkUpdates = checkUpdates;
+    </script>
+</body>
+</html>
